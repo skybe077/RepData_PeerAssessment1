@@ -1,25 +1,453 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: 'Assignment 1: Steps Report'
+author: "Edwin | Github: https://github.com/skybe077"
+date: "Sunday, June 28, 2015"
+output: html_document
 ---
+###Overview
+We're given personal movement data and we're asked to find patterns from this dataset. 
+Each question is a section that contains the answer, required plot(s), and R code (titled **R Code**) at the end of the section. Additional analysis is labeled as "*Additional Analysis*" in the report and R code. 
+
+**The Dataset**
+
+Steps data from a personal activity monitoring device is collected  at 5 minute intervals throughout the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+####Short Answers
+**1. Loading and preprocessing the data**
+
+The date column that needs to cocerced to the right class (i.e. Date). In addition, there are 2,304 NAs in steps.
+
+**2. What is mean total number of steps taken per day?**
+
+* Mean: 9,354.23
+* Median: 10,395
+
+**3. What is the average daily activity pattern?**
+
+The maximum number of steps - *206.17* - is at the interval: **835**. 
+
+We further analysed the data by divvying up into 2 distinct sections: Morning Rush Hour (*800 to 1000*) and Evening Rush Hour (*1700 to 2000*).Mornings (*800 to 1000*) have **3.1X** more steps (114.46 steps) than the daily average of **37.38** steps. However, traditional evening rush hour (*1700 to 2000*) is only **1.6X** more steps (58.34 steps) than the daily average .
 
 
-## Loading and preprocessing the data
+**4. Imputing missing values**
+
+Replacing NAs in the dataset seem to converge both mean and median into 1 value.
+
+* Total number of missing values: 2,304
+* Interval mean: 37.38 & median: 34.11
+* After input mean: 10766.19 & median: 10766.19
+
+
+**5. Are there differences in activity patterns between weekdays and weekends?**
+
+Yes. Overall activity level on weekdays is slightly less than weekends. Weekdays tend to get more activity during the mornings. However during the weekends, the reverse is true from afternoons onwards 
 
 
 
-## What is mean total number of steps taken per day?
+******
+
+##Questions & Answers
+
+###1.  Loading and preprocessing the data
+******
+Loading the data is easy. However there is a date column that needs to cocerced to the right class (i.e. Date) before we can run our analyses. 
+
+```{r}
+  activity <- read.csv("activity.csv")
+  activity$date <- as.Date(activity$date)
+```
+
+
+Looking into the dataset shows 2,304 NAs in steps. We will have to account for these NAs during our analyses.
+
+```{r}
+  summary(activity)
+```
+
+
+###2.  What is mean total number of steps taken per day?
+******
+
+```{r , echo=FALSE}
+  activitySum <- aggregate(steps ~ date, data = activity, sum, na.rm=TRUE, na.action=NULL)
+  
+  meanTotal <- mean(activitySum$steps)
+  medianTotal <- median(activitySum$steps)
+```
+
+The mean & median number of steps per day is **`r format(round(meanTotal), nsmall=2)`** and **`r format(round(medianTotal), nsmall=2)`** respectively.
+
+Greatest activity categories are within *1,000 to 1,500* steps.
+
+```{r , echo=FALSE}
+hist(activitySum$steps, xlab="Total Number of Steps per Day", main="Histogram of Steps per Day")
+```
+
+**R Code** 
+```{r , eval=FALSE}
+  activitySum <- aggregate(steps ~ date, data = activity, sum, na.rm=TRUE, na.action=NULL)
+  
+  meanTotal <- mean(activitySum$steps)
+  medianTotal <- median(activitySum$steps)
+  hist(activitySum$steps, xlab="Total Number of Steps per Day", main="Histogram of Steps per Day")
+```
+
+###3.	What is the average daily activity pattern?
+******
+
+```{r , echo=FALSE}
+  library(lattice)
+
+  activityDay <- aggregate(steps ~ interval, data = activity, mean, na.rm=TRUE, na.action=NULL)
+
+  time_intervals <- c(0, 800, 1000, 1700, 1900, 2355)
+  time_labels <- c("<800", "800-1000", "1200-1700", "1700-1900", ">2000")
+
+  t1<-cut(activityDay$interval, time_intervals, labels=time_labels, include.lowest=TRUE)
+  activityDay$cat<-t1
+
+  meanDay <- mean(activityDay$steps)
+  meanMorn <- mean(activityDay[activityDay$cat%in%time_labels[2],]$steps)
+  meanEven <- mean(activityDay[activityDay$cat%in%time_labels[4],]$steps)
+
+```
+
+This interval - **`r activityDay[activityDay$steps==max(activityDay$steps),"interval"]`** - contains the maximum number of steps: **`r format(round(max(activityDay$steps),2), nsmall=2)`.**
+
+Daily Average Activity: **`r format(round(meanDay,2), nsmall=2)`** steps
+
+I've highlighted 2 distinct sections (*`r time_labels[2]`* & *`r time_labels[4]`*) corresponding to Morning and Evening Rush Hours in blue and red respectively. 
+
+
+```{r , echo=FALSE}
+  plot(activityDay$interval, activityDay$steps, type="l", xlab="Intervals", ylab="Average Steps", main="Average Daily Activity Pattern")
+
+  abline(v = time_intervals[2:3], col="blue")
+  segments(y0 = meanMorn, x0 = time_intervals[2], x1 = time_intervals[3], col="blue")
+
+  abline(v = time_intervals[4:5], col="red")
+  segments(y0 = meanEven, x0 = time_intervals[4], x1 = time_intervals[5], col="red")
+
+```  
+
+
+####Morning & Evening Rush Hour
+*Additional Analysis*
+
+Unsurprisingly, Morning RushHhour (*`r time_labels[2]`*) sees **`r format(round(meanMorn/meanDay,1), nsmall=1)`X** more steps (**`r format(round(meanMorn,2), nsmall=2)`** steps) than the daily average of **`r format(round(meanDay,2), nsmall=2)`** steps. However, traditional evening rush hour (*`r time_labels[4]`*) is only **`r format(round(meanEven/meanDay,1), nsmall=1)`X**  more steps (**`r format(round(meanEven,2), nsmall=2)`** steps) than the daily average .
+
+I had expected the activity level for both rush hours to be somewhat similar, not **`r format(round(meanMorn/meanEven,1), nsmall=1)`X** more in favour of Morning Rush Hour! It is possible that participants might be only working part-time or are free to roam, which would explain the discrepancy. Also, this data includes weekends which might have skewed evening data. 
+
+  
+```{r , echo=FALSE}
+  # zoom in on Mornings and evenings
+lattice.options(default.args = list(as.table = TRUE))
+xyplot(steps~interval | cat, data=activityDay[activityDay$cat%in%time_labels[c(2,4)],], layout= c(2,1), panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")
+  }, main="Morning & Evening Rush Hour")
+  
+
+```
+
+**R Code** 
+```{r , eval=FALSE}
+  library(lattice)
+
+  activityDay <- aggregate(steps ~ interval, data = activity, mean, na.rm=TRUE, na.action=NULL)
+
+  time_intervals <- c(0,800,1000,1700,2000, 2355)
+  time_labels <- c("<800", "800-1000", "1200-1700", "1700-2000", ">2000")
+
+  t1<-cut(activityDay$interval, time_intervals, labels=time_labels, include.lowest=TRUE)
+  activityDay$cat<-t1
+
+#Plot Average Daily Activity Pattern
+  plot(activityDay$interval, activityDay$steps, type="l", xlab="Intervals", ylab="Average Steps", main="Average Daily Activity Pattern")
+
+  abline(v = time_intervals[2:3], col="blue")
+  segments(y0 = mean(activityDay[activityDay$cat%in%time_labels[2],]$steps), x0 = time_intervals[2], x1 = time_intervals[3], col="blue")
+
+  abline(v = time_intervals[4:5], col="red")
+  segments(y0 = mean(activityDay[activityDay$cat%in%time_labels[4],]$steps), x0 = time_intervals[4], x1 = time_intervals[5], col="red")
+
+#Plot Mornings & Evenings
+#Additional Analysis
+lattice.options(default.args = list(as.table = TRUE))
+xyplot(steps~interval | cat, data=activityDay[activityDay$cat%in%time_labels[c(2,4)],], layout= c(2,1), panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")
+  }, main="Morning & Evening Rush Hour")
+  
+```  
+
+###4.	Imputing missing values
+******
+```{r , echo=FALSE}
+  # the total number of missing values = 2304
+  totalNA <- sum(is.na(activity$steps))
+  
+  # replaces NA in steps with mean for that interval
+  activity1 <- activity
+  activity1$steps[which(is.na(activity1$steps) & activityDay$interval == activity1$interval)] <- activityDay$steps
+  
+  # SUM   
+  activitySum1 <- aggregate(steps ~ date, data = activity1, sum, na.rm=TRUE, na.action=NULL)
+
+  # mean: 10766.19; median: 10766.19
+  meanReplace <- mean(activitySum1$steps)
+  medianReplace <- median(activitySum1$steps)
+
+```
+
+
+There are **`r totalNA`** missing values in the dataset. We replace the NAs by doing the following:
+
+1. Get the *Mean Steps* for each *interval*
+2. Go through the dataset and replace with the corresponding *Mean Steps*
+
+**Means & Median Comparison**
+
+|  When|  Mean|  Median|
+|:-------------|------------|-------------|
+|Before |`r format(round(meanTotal), nsmall=2)`|`r format(round(medianTotal), nsmall=2)`|
+|After |`r format(round(meanReplace), nsmall=2)`|`r format(round(medianReplace), nsmall=2)`|
+
+It seems that replacement will converge both mean and median into the same value (`r format(round(medianReplace), nsmall=2)`).
+
+```{r , echo=FALSE}
+  hist(activitySum1$steps, xlab="Number of Steps", main="Histogram of Steps After Replacing NAs")
+```
+
+This histogram shows a marked difference from Question 2 Histogram. The *0 to 500 step* category has reduced in frequency, while *10,000 to 15,000 step*  category has definitely increased.
+
+
+**R Code** 
+```{r, eval=FALSE} 
+  # the total number of missing values = 2304
+  totalNA <- sum(is.na(activity$steps))
+  
+  # replaces NA in steps with mean for that interval
+  activity1 <- activity
+  activity1$steps[which(is.na(activity1$steps) & activityDay$interval == activity1$interval)] <- activityDay$steps
+  
+  # SUM   
+  activitySum1 <- aggregate(steps ~ date, data = activity1, sum, na.rm=TRUE, na.action=NULL)
+  hist(activitySum1$steps, xlab="Number of Steps", main="Histogram of Steps After Replacing NAs")
+  
+  # mean: 10766.19; median: 10766.19
+  meanSum <- mean(activitySum1$steps)
+  medianSum <- median(activitySum1$steps)
+
+```
 
 
 
-## What is the average daily activity pattern?
+
+###5.	Are there differences in activity patterns between weekdays and weekends?
+******
+```{r , echo=FALSE}
+  day <- weekdays(activity$date)
+  
+  w1 <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+  w2 <- c("Saturday", "Sunday")
+
+  day[(day %in% w1)]<-"Weekday"
+  day[(day %in% w2)]<-"Weekend"
+  
+  activity[,"day"] <- day
+
+  # Replaces NA in steps with mean for that interval
+  activity1 <- activity
+  activity1$steps[which(is.na(activity1$steps) & activityDay$interval == activity1$interval)] <- activityDay$steps
+
+  # Bands intervals into categories
+  time_intervals <- c(0, 800, 1000, 1200, 1500, 1700, 2000, 2355)
+  time_labels <- c("<800", "800-1000", "1000-1200", "1200-1500", "1500-1700", "1700-2000", ">2000")
+
+  activity2 <- aggregate(steps ~ day +interval, data = activity1, mean, na.rm=TRUE, na.action=NULL)
+
+  t1<-cut(activity2$interval, time_intervals, labels=time_labels, include.lowest=TRUE)
+  activity2$cat<-t1
+
+#Break up into segments
+  meanWkday <- c()
+  meanWkend <- c()
+
+  meanWkday[1] <- mean(activity2[activity2$day=="Weekday",]$steps)
+  meanWkend[1] <- mean(activity2[activity2$day=="Weekend",]$steps)
+  
+  for (i in 1:length(time_labels)){
+    meanWkday[i+1] <-  mean(activity2[which(activity2$cat%in%time_labels[i] & activity2$day=="Weekday"),]$steps)
+    meanWkend[i+1] <-  mean(activity2[which(activity2$cat%in%time_labels[i] & activity2$day=="Weekend"),]$steps)
+  }
+
+  multipler <- meanWkday/meanWkend
+
+```
+
+Yes. Overall activity level on weekdays is slightly less than weekends (by a factor of **`r format(round(multipler[1], 1), nsmall=1)`**X). 
+
+I broke up the dataset according to `r length(time_labels)` time frames (`r time_labels`)to compare weekends and weekdays across traditional daily events (e.g. Morning Rush Hour [800 to 1000] and Evening Rush Hour [1700 to 2000]) and timings (e.g. mid afternoon, Night etc). 
+
+As such, we've noticed the following:
+
+**Weekdays**
+
+1. A large spike of activity during the mornings (*`r time_labels[1]`* to *`r time_labels[2]`*) - due Morning Rush Hour movement. 
+2. Activity dies down between 1000 to 1500, shows a small spike of activity from 1500 to 1700, and sustains from 1700 to 2000, before dropping off entirely. 
+
+**Weekends**
+
+1. Largely consistent throughout the day (from 800 to 1000, and 1200 to 2000)
+2. Activity is  doubled that of weekdays during the Afternoon (*`r time_labels[4]` & `r time_labels[5]`*) and Night (*`r time_labels[7]`*)
+3. Oddly enough, there is more activity on weekend Evening Rush Hour than on weekdays
 
 
+```{r , echo=FALSE}
+lattice.options(default.args = list(as.table = TRUE))
+xyplot(steps~interval | day, data=activity2, layout= c(1,2), panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")
+    panel.abline(v=time_intervals, col="gray")
 
-## Imputing missing values
+    }, main="Weekdays vs Weekends")
+
+```
+
+**Activity Chart**
+
+|  Type|  Total | *`r time_labels[1]`*|  *`r time_labels[2]`*| *`r time_labels[3]`*| *`r time_labels[4]`*| *`r time_labels[5]`*|*`r time_labels[6]`*|*`r time_labels[7]`*|
+|:-------------|------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
+|Weekday (WD)|`r format(round(meanWkday[1], 1), nsmall=1)`|`r format(round(meanWkday[2], 1), nsmall=1)`|`r format(round(meanWkday[3], 1), nsmall=1)`|`r format(round(meanWkday[4], 1), nsmall=1)`|`r format(round(meanWkday[5], 1), nsmall=1)`|`r format(round(meanWkday[6], 1), nsmall=1)`|`r format(round(meanWkday[7], 1), nsmall=1)`|`r format(round(meanWkday[8], 1), nsmall=1)`|
+|Weekend (WE)|`r format(round(meanWkend[1], 1), nsmall=1)`|`r format(round(meanWkend[2], 1), nsmall=1)`|`r format(round(meanWkend[3], 1), nsmall=1)`|`r format(round(meanWkend[4], 1), nsmall=1)`|`r format(round(meanWkend[5], 1), nsmall=1)`|`r format(round(meanWkend[6], 1), nsmall=1)`|`r format(round(meanWkend[7], 1), nsmall=1)`|`r format(round(meanWkend[8], 1), nsmall=1)`|
+|Comparision (WD/WE) |`r format(round(multipler[1], 1), nsmall=1)`X|`r format(round(multipler[2], 1), nsmall=1)`X|`r format(round(multipler[3], 1), nsmall=1)`X|`r format(round(multipler[4], 1), nsmall=1)`X|`r format(round(multipler[5], 1), nsmall=1)`X|`r format(round(multipler[6], 1), nsmall=1)`X|`r format(round(multipler[7], 1), nsmall=1)`X|`r format(round(multipler[8], 1), nsmall=1)`X|
+|Comparision (WE/WD) |`r format(round(1/multipler[1], 1), nsmall=1)`X|`r format(round(1/multipler[2], 1), nsmall=1)`X|`r format(round(1/multipler[3], 1), nsmall=1)`X|`r format(round(1/multipler[4], 1), nsmall=1)`X|`r format(round(1/multipler[5], 1), nsmall=1)`X|`r format(round(1/multipler[6], 1), nsmall=1)`X|`r format(round(1/multipler[7], 1), nsmall=1)`X|`r format(round(1/multipler[8], 1), nsmall=1)`X|
 
 
+###Plots & Activity Breakdowns by Time Frames
+*Additional Analysis*
 
-## Are there differences in activity patterns between weekdays and weekends?
+####0000 to 1200: Morning
+
+**Activity Chart**
+
+|  Type|  *`r time_labels[1]`*|  *`r time_labels[2]`*| *`r time_labels[3]`*|
+|:-------------|------------|-------------|-------------|
+|Weekday (WD)|`r format(round(meanWkday[2], 1), nsmall=1)`|`r format(round(meanWkday[3], 1), nsmall=1)`|`r format(round(meanWkday[4], 1), nsmall=1)`||
+|Weekend (WE)|`r format(round(meanWkend[2], 1), nsmall=1)`|`r format(round(meanWkend[3], 1), nsmall=1)`|`r format(round(meanWkend[4], 1), nsmall=1)`|
+|Comparision (WD/WE) |`r format(round(multipler[2], 1), nsmall=1)`X|`r format(round(multipler[3], 1), nsmall=1)`X|`r format(round(multipler[4], 1), nsmall=1)`X|
+|Comparision (WE/WD) |`r format(round(1/multipler[2], 1), nsmall=1)`X|`r format(round(1/multipler[3], 1), nsmall=1)`X|`r format(round(1/multipler[4], 1), nsmall=1)`X|
+
+```{r , echo=FALSE}
+  # Plot weekend vs weekday
+  xyplot(steps~interval | cat*day, data=activity2[activity2$cat%in%time_labels[1:3],], panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")
+  }, main="Activity in the Morning")
+
+```
+
+
+####1200 to 1700: Afternoon
+
+**Activity Chart**
+
+|  Type|  *`r time_labels[4]`*|  *`r time_labels[5]`*| 
+|:-------------|------------|-------------|
+|Weekday (WD)|`r format(round(meanWkday[5], 1), nsmall=1)`|`r format(round(meanWkday[6], 1), nsmall=1)`|
+|Weekend (WE)|`r format(round(meanWkend[5], 1), nsmall=1)`|`r format(round(meanWkend[6], 1), nsmall=1)`|
+|Comparision (WD/WE) |`r format(round(multipler[5], 1), nsmall=1)`X|`r format(round(multipler[6], 1), nsmall=1)`X|
+|Comparision (WE/WD) |`r format(round(1/multipler[5], 1), nsmall=1)`X|`r format(round(1/multipler[6], 1), nsmall=1)`X|
+
+```{r , echo=FALSE}
+  # Plot weekend vs weekday
+xyplot(steps~interval | cat*day, data=activity2[activity2$cat%in%time_labels[4:5],], panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")
+  }, main="Activity in the Afternoon")
+```
+
+####1700 to 2355: Night
+
+**Activity Chart**
+
+|  Type|  *`r time_labels[6]`*|  *`r time_labels[7]`*| 
+|:-------------|------------|-------------|
+|Weekday (WD)|`r format(round(meanWkday[7], 1), nsmall=1)`|`r format(round(meanWkday[8], 1), nsmall=1)`|
+|Weekend (WE)|`r format(round(meanWkend[7], 1), nsmall=1)`|`r format(round(meanWkend[8], 1), nsmall=1)`|
+|Comparision (WD/WE) |`r format(round(multipler[7], 1), nsmall=1)`X|`r format(round(multipler[8], 1), nsmall=1)`X|
+|Comparision (WE/WD) |`r format(round(1/multipler[7], 1), nsmall=1)`X|`r format(round(1/multipler[8], 1), nsmall=1)`X|
+
+```{r , echo=FALSE}
+  # Plot weekend vs weekday
+xyplot(steps~interval | cat*day, data=activity2[activity2$cat%in%time_labels[6:7],], panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")
+  } , main="Activity at Night")
+```
+
+
+**R Code** 
+```{r , eval=FALSE}
+   day <- weekdays(activity$date)
+  
+  w1 <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+  w2 <- c("Saturday", "Sunday")
+
+  day[(day %in% w1)]<-"Weekday"
+  day[(day %in% w2)]<-"Weekend"
+  
+  activity[,"day"] <- day
+
+  # Replaces NA in steps with mean for that interval
+  activity1 <- activity
+  activity1$steps[which(is.na(activity1$steps) & activityDay$interval == activity1$interval)] <- activityDay$steps
+
+  # Bands intervals into categories
+  time_intervals <- c(0,800,1200,1700,2000, 2355)
+  time_labels <- c("<800", "800-1200", "1200-1700", "1700-2000", ">2000")
+
+  activity2 <- aggregate(steps ~ day +interval, data = activity1, mean, na.rm=TRUE, na.action=NULL)
+
+  t1<-cut(activity2$interval, time_intervals, labels=time_labels, include.lowest=TRUE)
+  activity2$cat<-t1
+
+#Break up into segments
+  meanWkday <- c()
+  meanWkend <- c()
+
+  meanWkday[1] <- mean(activity2[activity2$day=="Weekday",]$steps)
+  meanWkend[1] <- mean(activity2[activity2$day=="Weekend",]$steps)
+  
+  for (i in 1:length(time_labels)){
+    meanWkday[i+1] <-  mean(activity2[which(activity2$cat%in%time_labels[i] & activity2$day=="Weekday"),]$steps)
+    meanWkend[i+1] <-  mean(activity2[which(activity2$cat%in%time_labels[i] & activity2$day=="Weekend"),]$steps)
+  }
+
+  multipler <- meanWkday/meanWkend
+
+# Plot graphs
+lattice.options(default.args = list(as.table = TRUE))
+xyplot(steps~interval | day, data=activity2, layout= c(1,2), panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")    
+    panel.abline(v=time_intervals, col="gray")
+  }, main="Weekdays vs Weekends")
+
+# Additional Analysis
+  xyplot(steps~interval | cat*day, data=activity2[activity2$cat%in%time_labels[1:3],], panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")
+  }, main="Activity in the Morning")
+
+xyplot(steps~interval | cat*day, data=activity2[activity2$cat%in%time_labels[4:5],], panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")
+  }, main="Activity in the Afternoon")
+
+xyplot(steps~interval | cat*day, data=activity2[activity2$cat%in%time_labels[6:7],], panel = function(x, y) {
+    panel.xyplot(x, y, type="l")
+    panel.abline(h=mean(y), col="red")
+  }, main="Activity at Night")
+```
