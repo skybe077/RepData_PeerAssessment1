@@ -111,7 +111,7 @@ Daily Average Activity: **37.38** steps
 I've highlighted 2 distinct sections (*800-1000* & *1700-1900*) corresponding to Morning and Evening Rush Hours in blue and red respectively. 
 
 
-![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
+![plot of chunk plot](figure/plot-1.png) 
 
 
 ####Morning & Evening Rush Hour
@@ -122,7 +122,7 @@ Unsurprisingly, Morning RushHhour (*800-1000*) sees **3.1X** more steps (**114.4
 I had expected the activity level for both rush hours to be somewhat similar, not **1.7X** more in favour of Morning Rush Hour! It is possible that participants might be only working part-time or are free to roam, which would explain the discrepancy. Also, this data includes weekends which might have skewed evening data. 
 
   
-![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png) 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
 
 **R Code** 
 
@@ -174,7 +174,7 @@ There are **2304** missing values in the dataset. We replace the NAs by doing th
 
 It seems that replacement will converge both mean and median into the same value (10766.00).
 
-![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
 
 This histogram shows a marked difference from Question 2 Histogram. The *0 to 500 step* category has reduced in frequency, while *10,000 to 15,000 step*  category has definitely increased.
 
@@ -223,7 +223,7 @@ As such, we've noticed the following:
 3. Oddly enough, there is more activity on weekend Evening Rush Hour than on weekdays
 
 
-![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png) 
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png) 
 
 **Activity Chart**
 
@@ -249,7 +249,7 @@ As such, we've noticed the following:
 |Comparision (WD/WE) |3.2X|1.3X|0.6X|
 |Comparision (WE/WD) |0.3X|0.8X|1.6X|
 
-![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png) 
 
 
 ####1200 to 1700: Afternoon
@@ -263,7 +263,7 @@ As such, we've noticed the following:
 |Comparision (WD/WE) |0.5X|0.5X|
 |Comparision (WE/WD) |2.1X|2.2X|
 
-![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png) 
+![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png) 
 
 ####1700 to 2355: Night
 
@@ -276,7 +276,7 @@ As such, we've noticed the following:
 |Comparision (WD/WE) |0.9X|0.4X|
 |Comparision (WE/WD) |1.1X|2.3X|
 
-![plot of chunk unnamed-chunk-17](figure/unnamed-chunk-17-1.png) 
+![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png) 
 
 
 **R Code** 
